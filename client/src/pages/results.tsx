@@ -4,17 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Trophy, Vote, Star, Zap, Award, ArrowLeft, Medal, Crown, RefreshCw } from "lucide-react";
+import { Loader2, Trophy, Vote, ArrowLeft, Medal, Crown, RefreshCw, Award } from "lucide-react";
+import { getCategoryConfig } from "@/lib/categories";
 import type { CandidateWithVotes } from "@shared/schema";
 
-const categoryConfig: Record<string, { color: string; icon: typeof Award }> = {
-  "Best Leader": { color: "text-amber-400 border-amber-500/30 bg-amber-500/10", icon: Star },
-  "Innovation Award": { color: "text-yellow-300 border-yellow-500/30 bg-yellow-500/10", icon: Zap },
-  "Entrepreneur of the Year": { color: "text-orange-400 border-orange-500/30 bg-orange-500/10", icon: Trophy },
-  "General": { color: "text-primary border-primary/30 bg-primary/10", icon: Award },
-};
-
-function CandidateAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+function CandidateAvatar({ name }: { name: string }) {
   const initials = name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
   const gradients = [
     "from-amber-600 to-yellow-400",
@@ -25,9 +19,8 @@ function CandidateAvatar({ name, size = "md" }: { name: string; size?: "sm" | "m
     "from-amber-700 to-yellow-500",
   ];
   const gi = name.charCodeAt(0) % gradients.length;
-  const sz = size === "md" ? "w-11 h-11 text-sm" : "w-8 h-8 text-xs";
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br ${gradients[gi]} flex items-center justify-center font-bold text-black flex-shrink-0`}>
+    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradients[gi]} flex items-center justify-center font-bold text-black text-xs flex-shrink-0`}>
       {initials}
     </div>
   );
@@ -46,12 +39,12 @@ function RankBadge({ rank }: { rank: number }) {
   );
   if (rank === 3) return (
     <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
-      <Medal className="w-3.5 h-3.5 text-muted-foreground/60" />
+      <Medal className="w-3.5 h-3.5 text-muted-foreground/50" />
     </div>
   );
   return (
     <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-      <span className="text-sm font-bold text-muted-foreground">{rank}</span>
+      <span className="text-xs font-bold text-muted-foreground">{rank}</span>
     </div>
   );
 }
@@ -84,15 +77,8 @@ export default function Results() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              className="text-primary"
-              data-testid="button-refresh"
-            >
-              {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
-              {!isFetching && "Refresh"}
+            <Button variant="ghost" size="sm" onClick={() => refetch()} className="text-primary" data-testid="button-refresh">
+              {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <><RefreshCw className="w-4 h-4 mr-1" />Refresh</>}
             </Button>
             <Link href="/">
               <Button variant="outline" size="sm" className="border-primary/30 text-primary" data-testid="link-vote">
@@ -108,7 +94,7 @@ export default function Results() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold gold-shimmer mb-1">Live Voting Results</h2>
           <p className="text-muted-foreground text-sm">
-            Auto-refreshes every 10 seconds &mdash; Total votes counted:{" "}
+            Auto-refreshes every 10 seconds &mdash; Total paid votes:{" "}
             <strong className="text-primary" data-testid="text-total-votes-results">{totalVotes.toLocaleString()}</strong>
           </p>
         </div>
@@ -117,9 +103,9 @@ export default function Results() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
           {[
             { label: "Total Votes", value: totalVotes.toLocaleString(), icon: Vote },
-            { label: "Candidates", value: candidates.length, icon: Award },
-            { label: "Categories", value: categories.length, icon: Star },
-            { label: "Amount Raised", value: `KSh ${(totalVotes * 10).toLocaleString()}`, icon: Trophy },
+            { label: "Nominees", value: candidates.length, icon: Award },
+            { label: "Categories", value: categories.length, icon: Trophy },
+            { label: "Amount Raised", value: `KSh ${(totalVotes * 10).toLocaleString()}`, icon: Crown },
           ].map(stat => {
             const Icon = stat.icon;
             return (
@@ -143,7 +129,7 @@ export default function Results() {
         ) : (
           <div className="space-y-10">
             {categories.map(cat => {
-              const cfg = categoryConfig[cat] || categoryConfig["General"];
+              const cfg = getCategoryConfig(cat);
               const CatIcon = cfg.icon;
               const catCandidates = grouped[cat] || [];
               const catTotal = catCandidates.reduce((s, c) => s + c.total_votes, 0);
@@ -152,7 +138,7 @@ export default function Results() {
               return (
                 <div key={cat}>
                   <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-semibold border ${cfg.color}`}>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold border ${cfg.color}`}>
                       <CatIcon className="w-3.5 h-3.5" />
                       {cat}
                     </div>
@@ -164,23 +150,22 @@ export default function Results() {
                     )}
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {catCandidates.map((candidate, idx) => {
                       const pct = catTotal > 0 ? Math.round((candidate.total_votes / catTotal) * 100) : 0;
                       const isLeader = idx === 0 && candidate.total_votes > 0;
-
                       return (
                         <Card
                           key={candidate.id}
                           className={`border-border transition-all duration-300 ${isLeader ? "gold-border-glow ring-1 ring-primary/30" : ""}`}
                           data-testid={`card-result-${candidate.id}`}
                         >
-                          <CardContent className="pt-4 pb-4">
+                          <CardContent className="py-3 px-4">
                             <div className="flex items-center gap-3">
                               <RankBadge rank={idx + 1} />
-                              <CandidateAvatar name={candidate.name} size="sm" />
+                              <CandidateAvatar name={candidate.name} />
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
                                   <div className="flex items-center gap-2">
                                     <span className="font-semibold text-foreground text-sm" data-testid={`text-result-name-${candidate.id}`}>
                                       {candidate.name}
@@ -191,14 +176,14 @@ export default function Results() {
                                       </Badge>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-shrink-0">
                                     <span className="text-sm font-bold text-primary" data-testid={`text-result-votes-${candidate.id}`}>
                                       {candidate.total_votes.toLocaleString()}
                                     </span>
-                                    <span className="text-xs text-muted-foreground">{pct}%</span>
+                                    <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
                                   </div>
                                 </div>
-                                <Progress value={pct} className="h-2" />
+                                <Progress value={pct} className="h-1.5" />
                               </div>
                             </div>
                           </CardContent>
@@ -218,7 +203,7 @@ export default function Results() {
               <Vote className="w-10 h-10 text-primary" />
             </div>
             <h3 className="font-bold text-foreground text-lg mb-1">No votes yet</h3>
-            <p className="text-muted-foreground text-sm mb-6">Be the first to vote in the NUSA Awards!</p>
+            <p className="text-muted-foreground text-sm mb-6">Be the first to cast a vote in NUSA Awards 2025!</p>
             <Link href="/">
               <Button className="bg-primary text-primary-foreground" data-testid="button-go-vote">
                 Go Vote Now

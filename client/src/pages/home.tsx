@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { getCategoryConfig } from "@/lib/categories";
 import {
   Trophy, Vote, Plus, Minus, Phone, User, ChevronRight,
-  CheckCircle2, Clock, XCircle, Loader2, BarChart3, Star, Award, Zap, Crown
+  CheckCircle2, Clock, XCircle, Loader2, BarChart3, Crown
 } from "lucide-react";
 import type { CandidateWithVotes } from "@shared/schema";
 
@@ -32,33 +33,6 @@ type PaymentRecord = {
   mpesa_receipt?: string;
 };
 
-const categoryConfig: Record<string, { color: string; glow: string; icon: typeof Award; label: string }> = {
-  "Best Leader": {
-    color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
-    glow: "ring-amber-500/30",
-    icon: Star,
-    label: "Best Leader",
-  },
-  "Innovation Award": {
-    color: "text-yellow-300 border-yellow-500/30 bg-yellow-500/10",
-    glow: "ring-yellow-400/30",
-    icon: Zap,
-    label: "Innovation Award",
-  },
-  "Entrepreneur of the Year": {
-    color: "text-orange-400 border-orange-500/30 bg-orange-500/10",
-    glow: "ring-orange-400/30",
-    icon: Trophy,
-    label: "Entrepreneur of Year",
-  },
-  "General": {
-    color: "text-primary border-primary/30 bg-primary/10",
-    glow: "ring-primary/30",
-    icon: Award,
-    label: "General",
-  },
-};
-
 function CandidateAvatar({ name }: { name: string }) {
   const initials = name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
   const gradients = [
@@ -71,7 +45,7 @@ function CandidateAvatar({ name }: { name: string }) {
   ];
   const gi = name.charCodeAt(0) % gradients.length;
   return (
-    <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${gradients[gi]} flex items-center justify-center font-bold text-black text-lg flex-shrink-0 shadow-lg`}>
+    <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${gradients[gi]} flex items-center justify-center font-bold text-black text-base flex-shrink-0 shadow-md`}>
       {initials}
     </div>
   );
@@ -97,7 +71,7 @@ export default function Home() {
   const totalVotes = Object.values(selections).reduce((s, v) => s + v, 0);
   const totalAmount = totalVotes * 10;
   const categories = [...new Set(candidates.map(c => c.category))];
-  const maxVotes = candidates.reduce((max, c) => Math.max(max, c.total_votes), 1);
+  const maxVotes = Math.max(...candidates.map(c => c.total_votes), 1);
 
   const grouped = categories.reduce((acc, cat) => {
     acc[cat] = candidates.filter(c => c.category === cat);
@@ -112,10 +86,10 @@ export default function Home() {
     onSuccess: (voter) => {
       setVoterId(voter.id);
       setStep("vote");
-      toast({ title: "Welcome, " + voter.full_name + "!", description: "Select your candidates and start voting." });
+      toast({ title: "Welcome, " + voter.full_name + "!", description: "Select your candidates and vote." });
     },
     onError: () => {
-      toast({ title: "Error", description: "Could not register. Please try again.", variant: "destructive" });
+      toast({ title: "Error", description: "Could not register. Try again.", variant: "destructive" });
     },
   });
 
@@ -132,7 +106,7 @@ export default function Home() {
       setSession(data);
       setStep("payment");
       if (data.status === "stk_pushed") {
-        toast({ title: "Check your phone!", description: "M-Pesa prompt sent. Enter your PIN to complete." });
+        toast({ title: "Check your phone!", description: "M-Pesa prompt sent. Enter your PIN to confirm." });
         startPolling(data.payment_id);
       }
     },
@@ -236,7 +210,7 @@ export default function Home() {
               </div>
               <h2 className="text-4xl font-bold gold-shimmer mb-3">NUSA Awards 2025</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Vote for outstanding individuals shaping our community.
+                Vote for outstanding individuals and chapters across <span className="text-primary font-semibold">12 award categories</span>.
                 Each vote costs <span className="text-primary font-semibold">KSh 10</span>, paid via M-Pesa.
               </p>
             </div>
@@ -277,7 +251,7 @@ export default function Home() {
                         required
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Used for M-Pesa STK Push payment</p>
+                    <p className="text-xs text-muted-foreground">Used for M-Pesa STK Push after voting</p>
                   </div>
                   <Button
                     type="submit"
@@ -295,8 +269,8 @@ export default function Home() {
             {!isLoading && (
               <div className="mt-6 grid grid-cols-3 gap-3">
                 {[
-                  { label: "Candidates", value: candidates.length },
-                  { label: "Categories", value: categories.length },
+                  { label: "Categories", value: categories.length || 12 },
+                  { label: "Nominees", value: candidates.length || 36 },
                   { label: "Per Vote", value: "KSh 10" },
                 ].map(stat => (
                   <Card key={stat.label} className="text-center py-4 border-border">
@@ -315,8 +289,8 @@ export default function Home() {
             <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Cast Your Votes</h2>
-                <p className="text-muted-foreground text-sm">
-                  Voting as <span className="text-primary font-semibold">{fullName}</span> — KSh 10 per vote, unlimited
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  Voting as <span className="text-primary font-semibold">{fullName}</span> — KSh 10 per vote, vote as many times as you like
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -335,13 +309,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Vote summary bar */}
             {totalVotes > 0 && (
               <div className="mb-6 px-4 py-3 rounded-md bg-primary/10 border border-primary/25 flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Vote className="w-4 h-4 text-primary" />
                   <span className="font-semibold text-foreground text-sm">
-                    {totalVotes} vote{totalVotes > 1 ? "s" : ""} across {Object.keys(selections).length} candidate{Object.keys(selections).length > 1 ? "s" : ""}
+                    {totalVotes} vote{totalVotes > 1 ? "s" : ""} across {Object.keys(selections).length} nominee{Object.keys(selections).length > 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="font-bold text-primary text-lg">KSh {totalAmount}</div>
@@ -355,17 +328,17 @@ export default function Home() {
             ) : (
               <div className="space-y-8">
                 {categories.map(cat => {
-                  const cfg = categoryConfig[cat] || categoryConfig["General"];
+                  const cfg = getCategoryConfig(cat);
                   const CatIcon = cfg.icon;
                   return (
                     <div key={cat}>
                       <div className="flex items-center gap-2 mb-4">
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-semibold border ${cfg.color}`}>
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold border ${cfg.color}`}>
                           <CatIcon className="w-3.5 h-3.5" />
                           {cat}
                         </div>
                       </div>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {(grouped[cat] || []).map(candidate => {
                           const count = selections[candidate.id] || 0;
                           return (
@@ -375,55 +348,55 @@ export default function Home() {
                               data-testid={`card-candidate-${candidate.id}`}
                             >
                               <CardContent className="pt-4 pb-4">
-                                <div className="flex items-start gap-3 mb-4">
+                                <div className="flex items-start gap-3 mb-3">
                                   <CandidateAvatar name={candidate.name} />
                                   <div className="min-w-0 flex-1">
-                                    <h3 className="font-semibold text-foreground leading-tight" data-testid={`text-candidate-name-${candidate.id}`}>
+                                    <h3 className="font-semibold text-foreground text-sm leading-snug" data-testid={`text-candidate-name-${candidate.id}`}>
                                       {candidate.name}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
                                       {candidate.description}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="mb-4">
+                                <div className="mb-3">
                                   <div className="flex justify-between mb-1">
                                     <span className="text-xs text-muted-foreground">Live votes</span>
                                     <span className="text-xs font-semibold text-primary" data-testid={`text-vote-count-${candidate.id}`}>
                                       {candidate.total_votes.toLocaleString()}
                                     </span>
                                   </div>
-                                  <Progress value={(candidate.total_votes / maxVotes) * 100} className="h-1.5" />
+                                  <Progress value={(candidate.total_votes / maxVotes) * 100} className="h-1" />
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5">
                                     <Button
                                       size="icon"
                                       variant="outline"
                                       onClick={() => updateVote(candidate.id, -1)}
                                       disabled={count === 0}
-                                      className="border-border"
+                                      className="border-border h-8 w-8"
                                       data-testid={`button-vote-minus-${candidate.id}`}
                                     >
-                                      <Minus className="w-3.5 h-3.5" />
+                                      <Minus className="w-3 h-3" />
                                     </Button>
-                                    <span className="w-8 text-center font-bold text-foreground" data-testid={`text-my-votes-${candidate.id}`}>
+                                    <span className="w-7 text-center font-bold text-foreground text-sm" data-testid={`text-my-votes-${candidate.id}`}>
                                       {count}
                                     </span>
                                     <Button
                                       size="icon"
                                       variant="outline"
                                       onClick={() => updateVote(candidate.id, 1)}
-                                      className="border-border"
+                                      className="border-border h-8 w-8"
                                       data-testid={`button-vote-plus-${candidate.id}`}
                                     >
-                                      <Plus className="w-3.5 h-3.5" />
+                                      <Plus className="w-3 h-3" />
                                     </Button>
                                   </div>
                                   {count > 0 && (
-                                    <Badge className="bg-primary/20 text-primary border-primary/30" data-testid={`badge-votes-cost-${candidate.id}`}>
+                                    <Badge className="text-xs bg-primary/20 text-primary border-primary/30" data-testid={`badge-votes-cost-${candidate.id}`}>
                                       KSh {count * 10}
                                     </Badge>
                                   )}
@@ -473,10 +446,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="rounded-md bg-muted/50 divide-y divide-border">
-                  {[
-                    { label: "Voter", value: fullName },
-                    { label: "Phone", value: phone },
-                  ].map(row => (
+                  {[{ label: "Voter", value: fullName }, { label: "Phone", value: phone }].map(row => (
                     <div key={row.label} className="flex justify-between items-center px-4 py-3">
                       <span className="text-sm text-muted-foreground">{row.label}</span>
                       <span className="text-sm font-medium text-foreground">{row.value}</span>
@@ -495,14 +465,14 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Selections</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Breakdown</p>
                   {Object.entries(selections).map(([cid, count]) => {
                     const cand = candidates.find(c => c.id === cid);
                     if (!cand) return null;
                     return (
                       <div key={cid} className="flex items-center justify-between text-sm">
-                        <span className="text-foreground">{cand.name}</span>
-                        <span className="text-muted-foreground">{count} × KSh 10 = <strong className="text-primary">KSh {count * 10}</strong></span>
+                        <span className="text-foreground truncate mr-2">{cand.name}</span>
+                        <span className="text-muted-foreground flex-shrink-0">{count} × KSh 10 = <strong className="text-primary">KSh {count * 10}</strong></span>
                       </div>
                     );
                   })}
@@ -566,7 +536,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold gold-shimmer mb-2">Votes Confirmed!</h2>
             <p className="text-muted-foreground mb-6">
               Your {paymentRecord.total_votes} vote{paymentRecord.total_votes > 1 ? "s" : ""} have been counted.
-              Thank you for participating in the NUSA Awards!
+              Thank you for participating in NUSA Awards 2025!
             </p>
 
             <Card className="mb-6 text-left border-border gold-border-glow">
@@ -604,12 +574,11 @@ export default function Home() {
             </div>
           </div>
         )}
-
       </main>
 
       <footer className="border-t border-border mt-16 py-6 text-center text-sm text-muted-foreground">
         <p className="text-primary/60 font-medium">NUSA Awards 2025</p>
-        <p className="mt-1 text-muted-foreground">Community Choice Voting Platform &mdash; KSh 10 per vote via M-Pesa</p>
+        <p className="mt-1">Community Choice Voting Platform &mdash; KSh 10 per vote via M-Pesa</p>
       </footer>
     </div>
   );
