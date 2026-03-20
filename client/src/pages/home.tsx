@@ -230,7 +230,7 @@ export default function Home() {
               <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 border border-primary/20 mb-5 shadow-lg">
                 <Trophy className="w-12 h-12 text-primary" />
               </div>
-              <h2 className="text-4xl font-bold gold-shimmer mb-3">NUSA Awards 2025</h2>
+              <h2 className="text-4xl font-bold gold-shimmer mb-3">NUSA Awards 2026</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Vote for outstanding individuals and chapters across <span className="text-primary font-semibold">12 award categories</span>.
                 Each vote costs <span className="text-primary font-semibold">KSh 10</span>, paid via M-Pesa.
