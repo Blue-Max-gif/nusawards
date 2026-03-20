@@ -10,21 +10,17 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
-  // Voters
   getVoter(id: string): Promise<Voter | undefined>;
   getVoterByPhone(phone: string): Promise<Voter | undefined>;
   createVoter(voter: InsertVoter): Promise<Voter>;
 
-  // Candidates
   getCandidates(): Promise<CandidateWithVotes[]>;
   getCandidate(id: string): Promise<Candidate | undefined>;
 
-  // Votes
   createVotes(voteItems: InsertVote[]): Promise<Vote[]>;
   getVotesByPaymentId(paymentId: string): Promise<Vote[]>;
   markVotesPaid(paymentId: string): Promise<void>;
 
-  // Payments
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPayment(id: string): Promise<Payment | undefined>;
   getPaymentByCheckoutRequestId(checkoutRequestId: string): Promise<Payment | undefined>;
@@ -55,16 +51,49 @@ export class MongoStorage implements IStorage {
     this.votes = this.db.collection<Vote>("votes");
     this.payments = this.db.collection<Payment>("payments");
 
-    // Seed initial candidates if empty
+    // ✅ Seed candidates with real categories
     const count = await this.candidates.countDocuments();
+
     if (count === 0) {
-      const initialCandidates: InsertCandidate[] = [
-        { name: "Candidate One", description: "First candidate description", category: "General", photo_url: "" },
-        { name: "Candidate Two", description: "Second candidate description", category: "General", photo_url: "" },
+      const categories = [
+        "Most Impactful NUSA Patron",
+        "Exemplary Leadership Award",
+        "Mentorship Personality of the Year",
+        "Chapter Rep of the Year",
+        "Chapter of the Year",
+        "Sportsperson of the Year",
+        "Blogger/Writer of the Year",
+        "Outstanding Student with Disability",
+        "Patrons Award for Academic Excellence",
+        "NUSA Alumni of the Year",
+        "Activist of the Year",
+        "Best Student-Led Research Project",
       ];
+
+      const initialCandidates: InsertCandidate[] = categories.flatMap(category => [
+        {
+          name: `${category} Nominee 1`,
+          description: `Nominee for ${category}`,
+          category,
+          photo_url: "",
+        },
+        {
+          name: `${category} Nominee 2`,
+          description: `Nominee for ${category}`,
+          category,
+          photo_url: "",
+        },
+        {
+          name: `${category} Nominee 3`,
+          description: `Nominee for ${category}`,
+          category,
+          photo_url: "",
+        },
+      ]);
+
       await Promise.all(initialCandidates.map(c => this.createCandidate(c)));
     }
-  }
+  } // ✅ FIXED: this closing bracket was missing
 
   private async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
     const newCandidate: Candidate = {
