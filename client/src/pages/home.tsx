@@ -608,7 +608,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-border mt-16 py-6 text-center text-sm text-muted-foreground">
-        <p className="text-primary/60 font-medium">NUSA Awards 2025</p>
+        <p className="text-primary/60 font-medium">NUSA Awards 2026</p>
         <p className="mt-1">Community Choice Voting Platform &mdash; KSh 10 per vote via M-Pesa</p>
       </footer>
     </div>
