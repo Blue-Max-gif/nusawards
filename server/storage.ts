@@ -54,65 +54,85 @@ export class MongoStorage implements IStorage {
     // Seed real candidates if empty
     const count = await this.candidates.countDocuments();
     if (count === 0) {
-      const categoriesWithCandidates: Record<string, { name: string; description: string }[]> = {
-        "Most Impactful NUSA Patron": [
-          { name: "Dr. John Mwangi", description: "Long-serving patron supporting student welfare" },
-          { name: "Prof. Jane Wanjiku", description: "Champion of student leadership and mentorship" },
-        ],
-        "Exemplary Leadership Award": [
-          { name: "Brian Otieno", description: "Student leader with outstanding impact" },
-          { name: "Mercy Atieno", description: "Led multiple successful student initiatives" },
-          { name: "Kevin Kiptoo", description: "Advocated for student rights and unity" },
-        ],
-        "Mentorship Personality of the Year": [
-          { name: "Lucy Njeri", description: "Dedicated mentor to young leaders" },
-          { name: "Samuel Ochieng", description: "Guided many students in career growth" },
-        ],
-        "Chapter Rep of the Year": [
-          { name: "Dennis Kariuki", description: "Active and impactful chapter representative" },
-          { name: "Faith Akinyi", description: "Strong voice for student concerns" },
-          { name: "Peter Mwangi", description: "Consistent and reliable leadership" },
-        ],
-        "Chapter of the Year": [
-          { name: "Egerton Chapter", description: "Most active and impactful chapter" },
-          { name: "Nairobi University Chapter", description: "Outstanding community involvement" },
-        ],
-        "Sportsperson of the Year": [
-          { name: "James Kipchoge", description: "Top performer in athletics" },
-          { name: "Allan Mutua", description: "Excelled in football competitions" },
-          { name: "Victor Wanyama Jr.", description: "Consistent sports excellence" },
-          { name: "Kelvin Otieno", description: "Outstanding team player" },
-        ],
-        "Blogger/Writer of the Year": [
-          { name: "Sharon Achieng", description: "Creative and impactful writer" },
-          { name: "David Kimani", description: "Top student blogger" },
-        ],
-        "Outstanding Student with Disability": [
-          { name: "Esther Wambui", description: "Inspiring resilience and excellence" },
-          { name: "Michael Onyango", description: "Academic and leadership excellence" },
-          { name: "Malvin Odallo", description: "Empowering People, Transforming Lives" },
-        ],
-        "Patrons Award for Academic Excellence": [
-          { name: "Grace Wanjiru", description: "Top academic performer" },
-          { name: "Daniel Kiprono", description: "Consistently high academic results" },
-          { name: "Ruth Chebet", description: "Excellence in research and studies" },
-        ],
-        "NUSA Alumni of the Year": [
-          { name: "Eng. Paul Mutiso", description: "Successful alumnus contributing to society" },
-          { name: "Dr. Anne Njeri", description: "Outstanding achievements post-graduation" },
-        ],
-        "Activist of the Year": [
-          { name: "Kevin Ouma", description: "Advocated for student rights" },
-          { name: "Brenda Atieno", description: "Led impactful campaigns" },
-          { name: "Allan Mwangi", description: "Voice for change and justice" },
-        ],
-        "Best Student-Led Research Project": [
-          { name: "AI Smart Farming Project", description: "Innovative agriculture solution" },
-          { name: "Campus Waste Recycling System", description: "Environmental sustainability project" },
-          { name: "Health Monitoring App", description: "Tech solution for student health" },
-          { name: "Smart Library System", description: "Digital transformation of libraries" },
-        ],
-      };
+     const categoriesWithCandidates: Record<string, { name: string; description: string }[]> = {
+  "Best Patron Over Time": [
+    { name: "Prof Vincent Onywera (Grade 1)", description: "" },
+    { name: "Hon Dr Mathews Owili", description: "" },
+  ],
+
+  "Exemplary Leadership Award": [
+    { name: "Emmanuel Peter", description: "" },
+    { name: "Tobias Osano", description: "" },
+    { name: "Leakey Ochieng", description: "" },
+    { name: "Gerald Anthony", description: "" },
+    { name: "Jemimah Achieng", description: "" },
+    { name: "Lé Trécida", description: "" },
+  ],
+
+  "Mentorship Personality of the Year": [
+    { name: "Jacob Omullo", description: "" },
+    { name: "Treicy Adhiambo", description: "" },
+    { name: "Shedrian Stacy", description: "" },
+    { name: "Joan Akinyi", description: "" },
+    { name: "Kris Sheriff", description: "" },
+  ],
+
+  "Chapter Rep of the Year": [
+    { name: "Normanvince", description: "" },
+    { name: "Lé Trécida", description: "" },
+    { name: "Nicholas Okoth", description: "" },
+    { name: "Maurice Oyombe", description: "" },
+    { name: "Robby Ouma", description: "" },
+    { name: "Rollince", description: "" },
+    { name: "Griffins Okeyo", description: "" },
+  ],
+
+  "NUSA Activist of the Year": [
+    { name: "David Okuta", description: "" },
+    { name: "Ochieng Fidel", description: "" },
+    { name: "David Maduva", description: "" },
+    { name: "Odhiambo Ezekiel", description: "" },
+    { name: "Le Trécida", description: "" },
+    { name: "Benard Kisero", description: "" },
+  ],
+
+  "Chapter of the Year": [
+    { name: "Maseno University", description: "" },
+    { name: "MMUST Chapter", description: "" },
+    { name: "Moi University", description: "" },
+    { name: "Kisii University", description: "" },
+    { name: "Kirinyaga University", description: "" },
+    { name: "Meru University", description: "" },
+    { name: "Mawego Technical", description: "" },
+    { name: "JOOUST Chapter", description: "" },
+    { name: "Meru University", description: "" },
+  ],
+
+  "Blogger of the Year": [
+    { name: "Hemstone Otieno", description: "" },
+    { name: "Omondi Griffin Otieno", description: "" },
+    { name: "Loch Wiye Tek", description: "" },
+    { name: "Betty Bash", description: "" },
+    { name: "Pachi e Pacha", description: "" },
+    { name: "Catalyst", description: "" },
+    { name: "Hope Kelly", description: "" },
+  ],
+
+  "Patron's Award for Academic Excellence": [
+    { name: "Roy Emmanuel", description: "" },
+    { name: "Ochieng John Guda", description: "" },
+    { name: "Rael Oguta", description: "" },
+    { name: "Lizza Achieng", description: "" },
+    { name: "Ambrose Adwet", description: "" },
+  ],
+
+  "NUSA Alumni of the Year": [
+    { name: "Juma Vincent (Emeritus Chair)", description: "" },
+    { name: "Kevin Okite", description: "" },
+    { name: "Steven Obiero", description: "" },
+    { name: "Sir Walter Okoth", description: "" },
+  ],
+};
 
       const initialCandidates: InsertCandidate[] = Object.entries(categoriesWithCandidates)
         .flatMap(([category, nominees]) =>
