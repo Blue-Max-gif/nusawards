@@ -51,6 +51,9 @@ function CandidateAvatar({ name }: { name: string }) {
   );
 }
 
+const VOTING_START = new Date("2026-03-25T08:00:00");
+const VOTING_END = new Date("2026-03-30T23:59:59");
+
 export default function Home() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -64,6 +67,11 @@ export default function Home() {
   const [paymentRecord, setPaymentRecord] = useState<PaymentRecord | null>(null);
   const [polling, setPolling] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const now = new Date();
+
+const votingNotStarted = now < VOTING_START;
+const votingEnded = now > VOTING_END;
+const votingActive = !votingNotStarted && !votingEnded;
 
   const { data: candidates = [], isLoading } = useQuery<CandidateWithVotes[]>({
     queryKey: ["/api/candidates"],
@@ -84,11 +92,35 @@ export default function Home() {
       const res = await apiRequest("POST", "/api/voters", { full_name: fullName, phone });
       return res.json();
     },
-    onSuccess: (voter) => {
-      setVoterId(voter.id);
-      setStep("vote");
-      toast({ title: "Welcome, " + voter.full_name + "!", description: "Select your candidates and vote." });
-    },
+   onSuccess: (voter) => {
+  const now = new Date();
+
+  if (now < VOTING_START) {
+    toast({
+      title: "Voting Not Started",
+      description: `Voting will start on ${VOTING_START.toLocaleString()}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (now > VOTING_END) {
+    toast({
+      title: "Voting Ended",
+      description: `Voting ended on ${VOTING_END.toLocaleString()}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setVoterId(voter.id);
+  setStep("vote");
+
+  toast({
+    title: "Welcome, " + voter.full_name + "!",
+    description: "You can now vote.",
+  });
+},
     onError: () => {
       toast({ title: "Error", description: "Could not register. Try again.", variant: "destructive" });
     },
@@ -275,15 +307,16 @@ export default function Home() {
                     </div>
                     <p className="text-xs text-muted-foreground">Used for M-Pesa STK Push after voting</p>
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary text-primary-foreground font-semibold"
-                    disabled={registerMutation.isPending}
-                    data-testid="button-register"
-                  >
-                    {registerMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-                    Start Voting
-                  </Button>
+                 <Button
+  type="submit"
+  disabled={registerMutation.isPending || !votingActive}
+>
+  {votingNotStarted
+    ? "Voting Not Started"
+    : votingEnded
+    ? "Voting Ended"
+    : "Start Voting"}
+</Button>
                 </form>
               </CardContent>
             </Card>
@@ -319,15 +352,20 @@ export default function Home() {
                 <Button variant="outline" size="sm" onClick={resetApp} className="border-border" data-testid="button-back">
                   Back
                 </Button>
-                <Button
-                  onClick={handleSubmitVotes}
-                  disabled={totalVotes === 0 || submitVotesMutation.isPending}
-                  className="bg-primary text-primary-foreground font-semibold"
-                  data-testid="button-submit-votes"
-                >
-                  {submitVotesMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Vote className="w-4 h-4 mr-2" />}
-                  Pay KSh {totalAmount}
-                </Button>
+               <Button
+  onClick={handleSubmitVotes}
+  disabled={!votingActive || totalVotes === 0 || submitVotesMutation.isPending}
+  className="bg-primary text-primary-foreground font-semibold"
+  data-testid="button-submit-votes"
+>
+  {votingNotStarted
+    ? "Voting Not Started"
+    : votingEnded
+    ? "Voting Ended"
+    : submitVotesMutation.isPending
+    ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+    : <><Vote className="w-4 h-4 mr-2" /> Pay KSh {totalAmount}</>}
+</Button>
               </div>
             </div>
 
