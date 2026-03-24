@@ -51,8 +51,8 @@ function CandidateAvatar({ name }: { name: string }) {
   );
 }
 
-const VOTING_START = new Date("2026-03-25T08:00:00");
-const VOTING_END = new Date("2026-03-30T23:59:59");
+const VOTING_START = new Date("2026-03-24T19:00:00");
+const VOTING_END = new Date("2026-04-25T23:59:59");
 
 export default function Home() {
   const { toast } = useToast();
